@@ -1,0 +1,22 @@
+{
+  "name": "terser-check",
+  "version": "1.0.0",
+  "description": "check lines of GWT output agains terser",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zbynek/terser-check.git"
+  },
+  "author": "Zbynek",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zbynek/terser-check/issues"
+  },
+  "homepage": "https://github.com/zbynek/terser-check#readme",
+  "dependencies": {
+    "terser": "^5.46.0"
+  }
+}
