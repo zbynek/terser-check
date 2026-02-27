@@ -17,6 +17,10 @@
   },
   "homepage": "https://github.com/zbynek/terser-check#readme",
   "dependencies": {
+    "source-map": "^0.7.6",
     "terser": "^5.46.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.1"
   }
 }
