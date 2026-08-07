@@ -1,0 +1,73 @@
+# Run simple checks to make sure that the build is sane when any branch is pushed or pull
+# request created. Comments or annotations will be added to a pull request in the case of
+# style guide violations. Presently, tests are not run on pull requests.
+name: Quick smoke test
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout terser-check itself into one directory
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
+        with:
+          # we need depth=2 to see which style violations overlap with the current changes
+          fetch-depth: 2
+      - name: Checkout GWT into a sibling directory
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
+        with:
+          repository: 'gwtproject/gwt'
+          path: 'gwt'
+      - name: Checkout GWT tools into a sibling directory
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
+        with:
+          repository: 'gwtproject/tools'
+          path: 'tools'
+      - name: Checkout GWT tools into a sibling directory
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
+        with:
+          repository: 'geogebra/geogebra'
+          path: 'geogebra'
+          fetch-depth: 1
+      - name: Set up JDK ${{ matrix.java-version }}
+        # GWT presently requires Java 17+ to build
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a #v5.5.0
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'temurin'
+      - name: Set up reviewdog for easier checks on the PR's checkstyle output
+        uses: reviewdog/action-setup@d8a7baabd7f3e8544ee4dbde3ee41d0011c3a93f #v1.5.0
+        with:
+          reviewdog_version: latest
+
+      - name: Build GWT and push it to local maven
+        # Presently this runs no tests at all, but could run quick tests
+        run: |
+          set -eux
+          cd gwt
+          # Set env vars to ensure we get the build we expect
+          export \
+            TZ=America/Los_Angeles \
+            ANT_OPTS=-Dfile.encoding=UTF8 \
+            ANT_OPTS=-Xmx2g
+          ant dist-dev
+          export GWT_VERSION=2.14.0-SNAPSHOT; yes '' | ./maven/push-gwtproject.sh
+          cd ../geogebra
+          patch -p0 < ../geogebra.patch
+          ./gradlew -p ./source/web :web:gwtCompile -Pgmodule=org.geogebra.web.Web3D
+          
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.0'
+      - name: "create report"
+        run: |
+           node ci
+           node ./index.mjs ./geogebra/source/web/web/war/web3d/*.cache.js ./geogebra/source/web/web/build/gwt/deploy/web3d/symbolMaps/*_sourceMap0.json geogebra/geogebra
+
+      - name: Upload checkstyle xml for manual review
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
+        if: ${{ matrix.java-version == '21' }}
+        with:
+          name: checkstyle-reports-java${{ matrix.java-version }}
+          path: 'gwt/build/out/**/checkstyle*.xml'
+          retention-days: 5

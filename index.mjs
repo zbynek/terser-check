@@ -2,30 +2,13 @@ import { minify } from "terser";
 import fs from "fs/promises";
 import process from "process";
 import { SourceMapConsumer } from "source-map";
+import {parse} from "acorn";
+import { glob } from 'tinyglobby';
 
-const map = await fs.readFile(process.argv[3], "utf-8");
+const matchedMap = await glob([process.argv[3].replaceAll('\\', '/')]);
+const map = await fs.readFile(matchedMap[0], "utf-8");
 const repo = encodeURIComponent(process.argv[4]);
-const contributors = new Array(30000);
-await SourceMapConsumer.with(JSON.parse(map), null, (consumer) => {
-  consumer.eachMapping(
-    ({
-      source,
-      generatedLine,
-      generatedColumn,
-      originalLine,
-      originalColumn,
-      name,
-    }) => {
-      if (!source) {
-        return;
-      }
-      contributors[generatedLine] = contributors[generatedLine] || {};
-      contributors[generatedLine][source] =
-        contributors[generatedLine][source] || new Set();
-      contributors[generatedLine][source].add(originalLine);
-    },
-  );
-});
+
 const listLines = ([file, lines]) => {
   const link = `https://github.com/search?q=repo%3A${repo}%20${encodeURIComponent(file)}&type=code`;
   return `<a href="${link}">${file}</a>: ${[...lines].join(",")}\n`;
@@ -74,26 +57,69 @@ const defaultOptions = {
   toplevel: false,
 };
 
-const lines = (await fs.readFile(process.argv[2], "utf-8")).split("\n");
+
+const matchedJs = await glob([process.argv[2].replaceAll('\\', '/')]);
+const compiled = await fs.readFile(matchedJs[0], "utf-8");
+const lineStarts = [0];
+for (let idx = 1; idx < compiled.length && idx >= 0; idx = compiled.indexOf("\n", idx + 1)) {
+  lineStarts.push(idx + 1);
+}
+
+const program = parse(compiled, {"ecmaVersion": "latest"});
+const functions = program.body.filter((node) => node.type === "FunctionDeclaration");
+const contributors = new Array(lineStarts.length);
+console.log("Parsing source map...");
+let functionIndex = 0;
+let column = 0;
+await SourceMapConsumer.with(JSON.parse(map), null, (consumer) => {
+  consumer.eachMapping(
+    ({
+      source,
+      generatedLine,
+      generatedColumn,
+      originalLine,
+      originalColumn,
+      name,
+    }) => {
+      if (!source) {
+        column = generatedColumn;
+        return;
+      }
+      let current = functions[functionIndex];
+
+      while (current.end < lineStarts[generatedLine] + generatedColumn) {
+        functionIndex++;
+        current = functions[functionIndex];
+        if (!current) {
+          functionIndex = 0;
+          console.warn(`Unexpected mapping for ${source}:${originalLine}:${originalColumn} at ${generatedLine}:${generatedColumn} - no more functions`);
+          return;
+        }
+      }
+      if (column > generatedColumn) {
+        column = 0;
+      }
+      contributors[functionIndex] = contributors[functionIndex] || {};
+      contributors[functionIndex][source] =
+        contributors[functionIndex][source] || new Set();
+      contributors[functionIndex][source].add(`${originalLine}:${column}-${generatedColumn}`);
+      column = generatedColumn;
+    },
+  );
+});
 let count = 0;
 const optimizations = [];
 let total = 0;
 let totalOptimized = 0;
-for (const line of lines) {
+for (const func of functions) {
+  const line = compiled.slice(func.start, func.end);
   count++;
-  if (!line.startsWith("function") || line.includes("<svg")) {
+  if (line.includes("<svg")) {
     continue;
   }
-  let code = "";
-  try {
-    const codeObject = await minify(line, defaultOptions);
-    code = codeObject.code;
-  } catch (e) {
-    console.log(`Could not parse: ${line}`);
-    continue;
-  }
+  const {code} = await minify(line, defaultOptions);
   if (count % 1000 === 0) {
-    console.log(`${count} / ${lines.length}`);
+    console.log(`${count} / ${functions.length}`);
   }
   total += line.length;
   totalOptimized += code.length;
@@ -121,7 +147,7 @@ for (const opt of optimizations) {
   await report.write(`<hr><p>Ratio: ${opt.ratio.toFixed(4)}</p>
   <p>src: <code>${escapeHTML(opt.original)}</code></p>
   <p>opt: <code>${escapeHTML(opt.optimized)}</code></p>
-  <p>loc: ${Object.entries(contributors[opt.location]).map(listLines)}</p>\n`);
+  <p>loc: ${Object.entries(contributors[opt.location]||{}).map(listLines)}</p>\n`);
 }
 await report.write(`</main></body></html>\n`);
 
