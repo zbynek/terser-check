@@ -53,7 +53,7 @@ jobs:
           export GWT_VERSION=2.14.0-SNAPSHOT; yes '' | ./maven/push-gwtproject.sh
           cd ../geogebra
           patch -p1 < ../geogebra.patch
-          ./gradlew -p ./source/web :web:gwtCompile -Pgmodule=org.geogebra.web.Web3D
+          ./gradlew -p ./source/web :web:deployIntoWar -Pgmodule=org.geogebra.web.SuperWeb
           
 
       - uses: actions/setup-node@v7
