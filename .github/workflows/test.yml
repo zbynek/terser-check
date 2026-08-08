@@ -62,7 +62,7 @@ jobs:
       - name: "create report"
         run: |
            npm ci
-           node ./index.mjs ./geogebra/source/web/web/war/web3d/*.cache.js ./geogebra/source/web/web/build/gwt/deploy/web3d/symbolMaps/*_sourceMap0.json geogebra/geogebra
+           node ./index.mjs ../geogebra/source/web/web/war/web3d/*.cache.js ../geogebra/source/web/web/build/gwt/deploy/web3d/symbolMaps/*_sourceMap0.json geogebra/geogebra
 
       - name: Upload size report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
