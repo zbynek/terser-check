@@ -29,6 +29,7 @@ jobs:
         with:
           repository: 'geogebra/geogebra'
           path: 'geogebra'
+          ref: '9b93256b7df401ff056c37b502d82df4d72b1522'
           fetch-depth: 1
       - name: Set up JDK
         # GWT presently requires Java 17+ to build
