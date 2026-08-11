@@ -15,13 +15,15 @@ jobs:
       - name: Checkout GWT into a sibling directory
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
-          repository: 'gwtproject/gwt'
+          repository: 'zbynek/gwt'
           path: 'gwt'
+          ref: 'jdt'
       - name: Checkout GWT tools into a sibling directory
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
-          repository: 'gwtproject/tools'
+          repository: 'zbynek/tools'
           path: 'tools'
+          ref: 'jdt'
       - name: Checkout GWT tools into a sibling directory
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
