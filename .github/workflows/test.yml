@@ -37,10 +37,6 @@ jobs:
         with:
           java-version: 17
           distribution: 'temurin'
-      - name: Set up reviewdog for easier checks on the PR's checkstyle output
-        uses: reviewdog/action-setup@d8a7baabd7f3e8544ee4dbde3ee41d0011c3a93f #v1.5.0
-        with:
-          reviewdog_version: latest
 
       - name: Build GWT and push it to local maven
         # Presently this runs no tests at all, but could run quick tests
