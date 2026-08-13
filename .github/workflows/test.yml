@@ -2,7 +2,7 @@
 # request created. Comments or annotations will be added to a pull request in the case of
 # style guide violations. Presently, tests are not run on pull requests.
 name: Quick smoke test
-on: [push, pull_request]
+on: [pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
