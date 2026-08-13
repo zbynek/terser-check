@@ -1,6 +1,3 @@
-# Run simple checks to make sure that the build is sane when any branch is pushed or pull
-# request created. Comments or annotations will be added to a pull request in the case of
-# style guide violations. Presently, tests are not run on pull requests.
 name: Quick smoke test
 on: [pull_request]
 jobs:
