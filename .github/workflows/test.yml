@@ -39,7 +39,6 @@ jobs:
           distribution: 'temurin'
 
       - name: Build GWT and push it to local maven
-        # Presently this runs no tests at all, but could run quick tests
         run: |
           set -eux
           cd gwt
