@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           repository: 'gwtproject/gwt'
-          ref: '2.13.1'
+          ref: '69b1fa1c5a4e9cff15efdcc27f421d0917cad69e'
           path: 'gwt'
       - name: Checkout GWT tools into a sibling directory
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
