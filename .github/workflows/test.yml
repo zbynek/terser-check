@@ -2,7 +2,7 @@
 # request created. Comments or annotations will be added to a pull request in the case of
 # style guide violations. Presently, tests are not run on pull requests.
 name: Quick smoke test
-on: [push, pull_request]
+on: [pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           repository: 'gwtproject/gwt'
-          ref: '2.13.1'
+          ref: '14a6e07715ef135dda6038c3647bc776bc8c1135'
           path: 'gwt'
       - name: Checkout GWT tools into a sibling directory
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
