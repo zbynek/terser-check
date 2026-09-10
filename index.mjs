@@ -139,9 +139,8 @@ const report = await fs.open("report.html", "w");
 await report.write(
   `<html><head><title>Comparison</title><link rel="stylesheet" href="https://unpkg.com/mvp.css"></head><body><main>\n`,
 );
-await report.write(
-  `Optimized from  ${total} to ${totalOptimized} (${(1 - totalOptimized / total) * 100}% saved)\n`,
-);
+const summary = `Optimized from  ${total} to ${totalOptimized} (${((1 - totalOptimized / total) * 100).toFixed(4)}% saved)\n`;
+await report.write(summary);
 // Write optimizations to the report file
 for (const opt of optimizations) {
   await report.write(`<hr><p>Ratio: ${opt.ratio.toFixed(4)}</p>
@@ -153,4 +152,6 @@ await report.write(`</main></body></html>\n`);
 
 // Close the file
 await report.close();
-console.log("Report written to report.html");
+const summaryFile = await fs.open("summary.md", "w");
+await summaryFile.write(summary);
+console.log("Report written to report.html, summary.md");
