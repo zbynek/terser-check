@@ -15,6 +15,13 @@ const listLines = ([file, lines]) => {
   return `<a href="${link}">${file}</a>: ${[...lines].join(",")}\n`;
 };
 
+const baseline = {
+  codeSize: 7800262,
+  compressedSize: 1816256,
+  total: 4790721,
+  totalOptimized: 4577030,
+};
+
 const escapeHTML = (str) =>
   str.replace(
     /[&<>'"]/g,
@@ -153,16 +160,20 @@ await report.write(
 );
 const optimizationRatio = ((1 - totalOptimized / total) * 100).toFixed(4);
 const summary = `Optimized from  ${total} to ${totalOptimized} (${optimizationRatio}% saved)\n`;
-const summaryMD = `
-|                        |Current             |
-|------------------------|--------------------|
-|Size                    |${codeSize}         |
-|Compressed              |${compressedSize}   |
-|Functions               |${total}            |
-|Functions optimized     |${totalOptimized}   |
-|Optimization saving     |${optimizationRatio}|
-`;
+
 const newBaseline = { codeSize, compressedSize, total, totalOptimized };
+const gain = (stat) =>
+  (((newBaseline[stat] - baseline[stat]) / baseline[stat]) * 100).toFixed(4);
+const fmt = (number) => new Intl.NumberFormat().format(number);
+const summaryMD = `
+|                        |Current                  |Change since 13.1                 |
+|------------------------|-------------------------|----------------------------------|
+|Size                    |${fmt(codeSize)}         |${gain("codeSize")}          |
+|Compressed              |${fmt(compressedSize)}   |${gain("compressedSize")}    |
+|Functions               |${fmt(total)}            |${gain("total")}             |
+|Functions optimized     |${fmt(totalOptimized)}   |${gain("totalOptimized")}    |
+|Optimization saving     |${optimizationRatio}     |                                  |
+`;
 console.log(newBaseline);
 await report.write(summary);
 // Write optimizations to the report file

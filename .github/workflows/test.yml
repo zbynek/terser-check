@@ -63,8 +63,6 @@ jobs:
           node-version: '24.0'
       - name: "create report"
         run: |
-           find geogebra/source/web/web/build
-           find geogebra/source/web/web/war
            npm ci
            node ./index.mjs ./geogebra/source/web/web/war/web3d/*.cache.js ./geogebra/source/web/web/build/gwt/deploy/web3d/symbolMaps/*_sourceMap0.json geogebra/geogebra
            cat summary.md >> $GITHUB_STEP_SUMMARY
