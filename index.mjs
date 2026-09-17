@@ -1,11 +1,12 @@
 import { minify } from "terser";
 import fs from "fs/promises";
-import process from "process";
+import process from "node:process";
 import { SourceMapConsumer } from "source-map";
-import {parse} from "acorn";
-import { glob } from 'tinyglobby';
+import { parse } from "acorn";
+import { glob } from "tinyglobby";
+import brotli from "brotli";
 
-const matchedMap = await glob([process.argv[3].replaceAll('\\', '/')]);
+const matchedMap = await glob([process.argv[3].replaceAll("\\", "/")]);
 const map = await fs.readFile(matchedMap[0], "utf-8");
 const repo = encodeURIComponent(process.argv[4]);
 
@@ -57,16 +58,23 @@ const defaultOptions = {
   toplevel: false,
 };
 
-
-const matchedJs = await glob([process.argv[2].replaceAll('\\', '/')]);
+const matchedJs = await glob([process.argv[2].replaceAll("\\", "/")]);
 const compiled = await fs.readFile(matchedJs[0], "utf-8");
+const codeSize = compiled.length;
+const compressedSize = brotli.compress(Buffer.from(compiled, "utf8")).length;
 const lineStarts = [0];
-for (let idx = 1; idx < compiled.length && idx >= 0; idx = compiled.indexOf("\n", idx + 1)) {
+for (
+  let idx = 1;
+  idx < compiled.length && idx >= 0;
+  idx = compiled.indexOf("\n", idx + 1)
+) {
   lineStarts.push(idx + 1);
 }
 
-const program = parse(compiled, {"ecmaVersion": "latest"});
-const functions = program.body.filter((node) => node.type === "FunctionDeclaration");
+const program = parse(compiled, { ecmaVersion: "latest" });
+const functions = program.body.filter(
+  (node) => node.type === "FunctionDeclaration",
+);
 const contributors = new Array(lineStarts.length);
 console.log("Parsing source map...");
 let functionIndex = 0;
@@ -92,7 +100,9 @@ await SourceMapConsumer.with(JSON.parse(map), null, (consumer) => {
         current = functions[functionIndex];
         if (!current) {
           functionIndex = 0;
-          console.warn(`Unexpected mapping for ${source}:${originalLine}:${originalColumn} at ${generatedLine}:${generatedColumn} - no more functions`);
+          console.warn(
+            `Unexpected mapping for ${source}:${originalLine}:${originalColumn} at ${generatedLine}:${generatedColumn} - no more functions`,
+          );
           return;
         }
       }
@@ -102,7 +112,9 @@ await SourceMapConsumer.with(JSON.parse(map), null, (consumer) => {
       contributors[functionIndex] = contributors[functionIndex] || {};
       contributors[functionIndex][source] =
         contributors[functionIndex][source] || new Set();
-      contributors[functionIndex][source].add(`${originalLine}:${column}-${generatedColumn}`);
+      contributors[functionIndex][source].add(
+        `${originalLine}:${column}-${generatedColumn}`,
+      );
       column = generatedColumn;
     },
   );
@@ -117,7 +129,7 @@ for (const func of functions) {
   if (line.includes("<svg")) {
     continue;
   }
-  const {code} = await minify(line, defaultOptions);
+  const { code } = await minify(line, defaultOptions);
   if (count % 1000 === 0) {
     console.log(`${count} / ${functions.length}`);
   }
@@ -139,19 +151,31 @@ const report = await fs.open("report.html", "w");
 await report.write(
   `<html><head><title>Comparison</title><link rel="stylesheet" href="https://unpkg.com/mvp.css"></head><body><main>\n`,
 );
-const summary = `Optimized from  ${total} to ${totalOptimized} (${((1 - totalOptimized / total) * 100).toFixed(4)}% saved)\n`;
+const optimizationRatio = ((1 - totalOptimized / total) * 100).toFixed(4);
+const summary = `Optimized from  ${total} to ${totalOptimized} (${optimizationRatio}% saved)\n`;
+const summaryMD = `
+|                        |Current             |
+|------------------------|--------------------|
+|Size                    |${codeSize}         |
+|Compressed              |${compressedSize}   |
+|Functions               |${total}            |
+|Functions optimized     |${totalOptimized}   |
+|Optimization saving     |${optimizationRatio}|
+`;
+const newBaseline = { codeSize, compressedSize, total, totalOptimized };
+console.log(newBaseline);
 await report.write(summary);
 // Write optimizations to the report file
 for (const opt of optimizations) {
   await report.write(`<hr><p>Ratio: ${opt.ratio.toFixed(4)}</p>
   <p>src: <code>${escapeHTML(opt.original)}</code></p>
   <p>opt: <code>${escapeHTML(opt.optimized)}</code></p>
-  <p>loc: ${Object.entries(contributors[opt.location]||{}).map(listLines)}</p>\n`);
+  <p>loc: ${Object.entries(contributors[opt.location] || {}).map(listLines)}</p>\n`);
 }
 await report.write(`</main></body></html>\n`);
 
 // Close the file
 await report.close();
 const summaryFile = await fs.open("summary.md", "w");
-await summaryFile.write(summary);
+await summaryFile.write(summaryMD);
 console.log("Report written to report.html, summary.md");

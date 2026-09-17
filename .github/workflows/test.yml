@@ -2,7 +2,11 @@
 # request created. Comments or annotations will be added to a pull request in the case of
 # style guide violations. Presently, tests are not run on pull requests.
 name: Quick smoke test
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,18 +16,18 @@ jobs:
         with:
           # we need depth=2 to see which style violations overlap with the current changes
           fetch-depth: 2
-      - name: Checkout GWT into a sibling directory
+      - name: Checkout GWT into a child directory
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           repository: 'gwtproject/gwt'
           ref: '2.13.1'
           path: 'gwt'
-      - name: Checkout GWT tools into a sibling directory
+      - name: Checkout GWT tools into a child directory
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           repository: 'gwtproject/tools'
           path: 'tools'
-      - name: Checkout GWT tools into a sibling directory
+      - name: Checkout GWT tools into a child directory
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           repository: 'geogebra/geogebra'
@@ -36,12 +40,8 @@ jobs:
         with:
           java-version: 17
           distribution: 'temurin'
-      - name: Set up reviewdog for easier checks on the PR's checkstyle output
-        uses: reviewdog/action-setup@d8a7baabd7f3e8544ee4dbde3ee41d0011c3a93f #v1.5.0
-        with:
-          reviewdog_version: latest
 
-      - name: Build GWT and push it to local maven
+      - name: Build GWT and compile code with it
         # Presently this runs no tests at all, but could run quick tests
         run: |
           set -eux
