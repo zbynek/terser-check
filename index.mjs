@@ -168,10 +168,10 @@ const fmt = (number) => new Intl.NumberFormat().format(number);
 const summaryMD = `
 |                        |Current                  |Change since 13.1                 |
 |------------------------|-------------------------|----------------------------------|
-|Size                    |${fmt(codeSize)}         |${gain("codeSize")}          |
-|Compressed              |${fmt(compressedSize)}   |${gain("compressedSize")}    |
-|Functions               |${fmt(total)}            |${gain("total")}             |
-|Functions optimized     |${fmt(totalOptimized)}   |${gain("totalOptimized")}    |
+|Size                    |${fmt(codeSize)}         |${gain("codeSize")}%         |
+|Compressed              |${fmt(compressedSize)}   |${gain("compressedSize")}%   |
+|Functions               |${fmt(total)}            |${gain("total")}%            |
+|Functions optimized     |${fmt(totalOptimized)}   |${gain("totalOptimized")}%   |
 |Optimization saving     |${optimizationRatio}     |                                  |
 `;
 console.log(newBaseline);
