@@ -19,8 +19,8 @@ jobs:
       - name: Checkout GWT into a child directory
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
-          repository: 'zbynek/gwt'
-          ref: 'alphabet' #4
+          repository: 'niloc132/gwt'
+          ref: '9568-double-equals-with-object.is-test' #4
           path: 'gwt'
       - name: Checkout GWT tools into a child directory
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
